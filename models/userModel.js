@@ -19,7 +19,7 @@ const userSchema = new Schema({
         type: Number,
     },
     isPremiumUser: {
-        type: Number,
+        type: Boolean,
     }
 })
 

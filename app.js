@@ -15,7 +15,7 @@ const mongoose = require('mongoose');
 require('dotenv').config()
 
 const userRoute = require('./routes/userRoute');
-// const expenseRoute = require('./routes/expensesRoute');
+const expenseRoute = require('./routes/expensesRoute');
 // const orderRoute = require('./routes/orders');
 // const passwordRoute = require('./routes/passwordRoute')
 
@@ -41,7 +41,7 @@ app.use(cors());
 
 
 app.use('/user', userRoute);
-// app.use('/expenses', expenseRoute);
+app.use('/expenses', expenseRoute);
 // app.use('/purchase', orderRoute);
 // app.use('/password', passwordRoute);
 

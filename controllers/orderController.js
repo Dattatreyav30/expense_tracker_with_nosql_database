@@ -110,7 +110,7 @@ const uploadToS3 = async (data, filename) => {
                 if (err) {
                     reject(err)
                 }
-                else {  
+                else {
                     resolve(s3response.Location)
                 }
             })

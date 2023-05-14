@@ -26,17 +26,17 @@ document.getElementById('rzrpayBtn').onclick = async (e) => {
 window.addEventListener('DOMContentLoaded', async e => {
     e.preventDefault();
     try {
-        const token = localStorage.getItem('token')
-        const premiumResponse = await axios.get('http://localhost:3000/purchase/check-premium', { headers: { 'authorization': token } })
-        if (premiumResponse.data.isPremiumUser) {
-            document.getElementById('rzrpayBtn').style.display = 'none';
-            document.getElementById('leaderboard').style.display = 'block';
-            document.getElementById('downloadExpenses').style.display = 'block';
-            document.getElementById('h3').innerHTML = 'premium user';
-        }
-        else {
-            document.getElementById('rzrpayBtn').style.display = 'block';
-        }
+        // const token = localStorage.getItem('token')
+        // const premiumResponse = await axios.get('http://localhost:3000/purchase/check-premium', { headers: { 'authorization': token } })
+        // if (premiumResponse.data.isPremiumUser) {
+        //     document.getElementById('rzrpayBtn').style.display = 'none';
+        //     document.getElementById('leaderboard').style.display = 'block';
+        //     document.getElementById('downloadExpenses').style.display = 'block';
+        //     document.getElementById('h3').innerHTML = 'premium user';
+        // }
+        // else {
+        //     document.getElementById('rzrpayBtn').style.display = 'block';
+        // }
         await getExpenses();
     } catch (err) {
         console.log(err);
@@ -121,7 +121,7 @@ const showData = async (data) => {
     const td = document.createElement('td');
     const td2 = document.createElement('td')
     row.innerHTML = (`<td>${data.expenseCategory}</td> <td>${data.expenseDescription}</td>  <td>${data.expenseAmount}</td>`)
-    td.appendChild(deleteData(tbody, row, data.id))
+    td.appendChild(deleteData(tbody, row, data._id))
     row.appendChild(td);
     tbody.appendChild(row);
     form.reset();
@@ -160,7 +160,7 @@ deleteData = (tbody, row, id) => {
     deleteBtn.className = 'btn btn-danger me-5'
     deleteBtn.onclick = async () => {
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('token');
             await axios.delete(`http://localhost:3000/expenses/delete-expense/${id}`, { headers: { 'authorization': token } });
             tbody.removeChild(row);
             location.reload();

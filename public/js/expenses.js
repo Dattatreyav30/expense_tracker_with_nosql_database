@@ -4,7 +4,7 @@ document.getElementById('rzrpayBtn').onclick = async (e) => {
     const token = localStorage.getItem('token')
     const response = await axios.get('http://localhost:3000/purchase/premiumMembership', { headers: { 'authorization': token } })
     const orderId = response.data.order.id;
-    const key_id = response.data.key_id;
+    const key_id = response.data.key_id;    
     const options = {
         key: key_id,
         order_id: orderId,
@@ -26,17 +26,17 @@ document.getElementById('rzrpayBtn').onclick = async (e) => {
 window.addEventListener('DOMContentLoaded', async e => {
     e.preventDefault();
     try {
-        // const token = localStorage.getItem('token')
-        // const premiumResponse = await axios.get('http://localhost:3000/purchase/check-premium', { headers: { 'authorization': token } })
-        // if (premiumResponse.data.isPremiumUser) {
-        //     document.getElementById('rzrpayBtn').style.display = 'none';
-        //     document.getElementById('leaderboard').style.display = 'block';
-        //     document.getElementById('downloadExpenses').style.display = 'block';
-        //     document.getElementById('h3').innerHTML = 'premium user';
-        // }
-        // else {
-        //     document.getElementById('rzrpayBtn').style.display = 'block';
-        // }
+        const token = localStorage.getItem('token')
+        const premiumResponse = await axios.get('http://localhost:3000/purchase/check-premium', { headers: { 'authorization': token } })
+        if (premiumResponse.data.isPremiumUser) {
+            document.getElementById('rzrpayBtn').style.display = 'none';
+            document.getElementById('leaderboard').style.display = 'block';
+            document.getElementById('downloadExpenses').style.display = 'block';
+            document.getElementById('h3').innerHTML = 'premium user';
+        }
+        else {
+            document.getElementById('rzrpayBtn').style.display = 'block';
+        }
         await getExpenses();
     } catch (err) {
         console.log(err);

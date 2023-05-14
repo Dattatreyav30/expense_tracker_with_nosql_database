@@ -1,9 +1,5 @@
-const { where, json } = require('sequelize');
 
 const env = require('dotenv').config();
-
-const sequelize = require('../util/database');
-
 const AWS = require('aws-sdk')
 
 const Razorpay = require('razorpay');
@@ -19,7 +15,14 @@ exports.premiumMembership = async (req, res, next) => {
         });
         const amount = 2500;
         const order = await rzp.orders.create({ amount, currency: 'INR' });
-        await req.user.createOrder({ orderId: order.id, status: 'PENDING', userId: req.user.id });
+        const newOrder = new Order(
+            {
+                orderId: order.id,
+                status: 'PENDING',
+                userId: req.user.id
+            }
+        );
+        await newOrder.save()
         res.status(201).json({ order, key_id: rzp.key_id });
     } catch (err) {
         console.error(err);
@@ -29,44 +32,37 @@ exports.premiumMembership = async (req, res, next) => {
 
 
 exports.updateTrnsactionstatus = async (req, res, next) => {
-    const t = await sequelize.transaction()
     try {
         const payementId = req.body.payment_id;
         const orderId = req.body.order_id;
-        const order = await Order.findOne({ where: { orderId: orderId }, transaction: t });
-        await order.update({ paymentId: payementId, status: 'SUCCESSFULL' })
-        await req.user.update({ isPremiumUser: true });
-        await t.commit()
+        const order = await Order.findOne({ orderId: orderId },);
+        await order.updateOne({ paymentId: payementId, status: 'SUCCESSFULL' })
+        await req.user.updateOne({ isPremiumUser: true });
         res.status(200).json({ success: true, message: 'transaction successfull' })
     } catch (err) {
-        await t.rollback()
         res.status(401).json({ message: 'something went wrong' })
     }
 }
 
 exports.transactionfailed = async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
         const payementId = req.body.payment_id;
         const orderId = req.body.order_id;
-        const order = await Order.findOne({ where: { orderId: orderId }, transaction: t });
-        await order.update({ paymentId: payementId, status: 'FAILED' })
-        await req.user.update({ isPremiumUser: false });
-        await t.commit()
+        const order = await Order.findOne({ orderId: orderId });
+        await order.updateOne({ paymentId: payementId, status: 'FAILED' })
         res.status(200).json({ success: true, message: 'transaction failed' })
     } catch (err) {
-        await t.rollback();
         res.status(401).json({ message: 'something went wrong' })
     }
 }
 
 exports.check_premium = async (req, res, next) => {
     try {
-        const user = await Order.findOne({ where: { userId: req.user.id, status: 'SUCCESSFULL' } });
+        const user = await User.findOne({ _id: req.user.id });
         if (!user) {
             return res.status(200).json({ isPremiumUser: false })
         }
-        if (user.status === 'SUCCESSFULL') {
+        if (user.isPremiumUser == true) {
             res.status(200).json({ isPremiumUser: true })
         } else {
             res.status(200).json({ isPremiumUser: false })
@@ -79,12 +75,9 @@ exports.check_premium = async (req, res, next) => {
 
 exports.leaderBord = async (req, res, next) => {
     try {
-        const allUserExpenses = await User.findAll({
-            order: [['totalexpenses', 'DESC']]
-        })
+        const allUserExpenses = await User.find().sort('-totalexpenses')
         res.status(200).json(allUserExpenses)
     } catch (err) {
-        console.log(err)
         res.status(500).json({ message: 'server errror' })
     }
 }
@@ -120,7 +113,7 @@ const uploadToS3 = async (data, filename) => {
 
 exports.download = async (req, res, next) => {
     try {
-        const allExpenses = await Expense.findAll({ where: { userId: req.user.id } })
+        const allExpenses = await Expense.find({ userId: req.user.id })
         const stringifiedExpenses = JSON.stringify(allExpenses);
         const filename = `Expenses${req.user.id}.txt`;
         const fileURL = await uploadToS3(stringifiedExpenses, filename)

@@ -32,7 +32,8 @@ exports.postAddUser = async (req, res, next) => {
                 username: username,
                 email: email,
                 password: hash,
-                totalexpenses: 0
+                totalexpenses: 0,
+                isPremiumUser: false
             })
             await user.save()
             res.status(200).json({ success: 'user signed up successfully' })

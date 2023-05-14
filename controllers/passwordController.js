@@ -5,6 +5,7 @@ require('dotenv').config();
 const transEmailApi = new sib.TransactionalEmailsApi();
 
 const forgotModel = require('../models/forgotPassowordModel');
+
 const User = require('../models/userModel');
 
 const { v4: uuidv4 } = require('uuid');
@@ -21,15 +22,16 @@ exports.passWord = async (req, res, next) => {
         const apiKey = client.authentications['api-key'];
         apiKey.apiKey = process.env.API_KEY;
 
-        const user = await User.findOne({ where: { email: email } })
+        const user = await User.findOne({ email: email })
         const userEmail = user.email;
-        const userId = user.id;
+        const userId = user._id;
         const id = uuidv4()
-        await forgotModel.create({
-            id: id,
+        const forget = new forgotModel({
+            uniqueId: id,
             userId: userId,
             isActive: true
         })
+        forget.save()
         const sender = {
             email: 'dattatreyadattu25@gmail.com'
         }
@@ -48,7 +50,8 @@ exports.passWord = async (req, res, next) => {
         })
         res.status(200).json({ message: 'password reset link sent succesfully' })
     } catch (err) {
-        res.status(500).json({ message: 'server error' })
+        console.log(err)
+        res.status(500).json({ message: 'server error or Invalid email' })
     }
 
 }
@@ -56,7 +59,7 @@ exports.passWord = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
     try {
         const id = req.params.id;
-        const password = await forgotModel.findOne({ where: { id: id, isActive: true } })
+        const password = await forgotModel.findOne({ uniqueId: id, isActive: true })
         const userId = password.userId
         const htmlContent = `
         <!DOCTYPE html>
@@ -90,9 +93,10 @@ exports.resetPassword = async (req, res, next) => {
                 e.preventDefault();
                 const obj = {
                     password: document.getElementById('newPassword').value,
-                    userId:${userId},
+                    userId:"${userId}"
                 }
                const response = await axios.post('http://localhost:3000/password/updatePassword/${id}', obj)
+               console.log("why")
                alert('password resetted succesfully');
                location.href = 'http://127.0.0.1:5500/views/login.html'
             })
@@ -100,22 +104,25 @@ exports.resetPassword = async (req, res, next) => {
         res.status(200).send(htmlContent);
 
     } catch (err) {
+        console.log(err)
         res.status(404).json('invalid link/link is expired')
     }
 }
+
 
 exports.updatePassword = async (req, res, next) => {
     try {
         const id = req.params.id
         const password = req.body.password;
-        const forgotUserId = await forgotModel.findOne({ where: { id: id } })
+        const forgotUserId = await forgotModel.findOne({ uniqueId: id })
         const userId = forgotUserId.userId
         bcrypt.hash(password, 10, async (err, hash) => {
-            await User.update({ password: hash }, { where: { id: userId } })
-            res.status(200).json({ success: 'password updated'})
+            await User.updateOne({ _id: userId }, { password: hash })
+            res.status(200).json({ success: 'password updated' })
         })
-        await forgotUserId.update({ isActive: false })
+        await forgotUserId.updateOne({ isActive: false })
     } catch (err) {
+        console.log(err)
         res.sttaus(404).json({ message: 'server error' })
     }
 }
